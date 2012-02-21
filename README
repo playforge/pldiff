@@ -1,0 +1,6 @@
+Requirements:
+biplist (http://github.com/wooster/biplist.git)
+
+This library is used for diffing of structured data.
+
+Its original purpose was for diffing property lists (hence the name), but really, any structured data will work.
