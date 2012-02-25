@@ -52,7 +52,7 @@ def diff_structures(structure_1, structure_2):
 
         new_keys = find_top_level_keys(new)
         old_keys = find_top_level_keys(old)
-        if not (new_keys and old_keys):
+        if new_keys is None or old_keys is None:
             # either new is a bare value or old was a bare value
             final['*'][make_path(path)] = new
         else:
