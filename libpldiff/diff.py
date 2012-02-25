@@ -65,7 +65,7 @@ def diff_structures(structure_1, structure_2):
                     comparisons.append((old[key], new[key], path + [key]))
                     old_keys.remove(key)
 
-            # keys preset only in old_keys
+            # keys present only in old_keys
             for key in old_keys:
                 final['-'].append(make_path(path + [key]))
 
