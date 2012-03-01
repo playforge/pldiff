@@ -87,3 +87,33 @@ class TestDiff(unittest.TestCase):
             {'+':{}, '*':{'a':'z'}, '-':[]},
             diff.diff_structures(old_structure, new_structure)
         )
+
+    def testOverwrite(self):
+        old_structure = {'a': {'b': {}}}
+        new_structure = {'a': {'c': {}}}
+        self.assertEquals(
+            {'+':{}, '*': new_structure, '-': []},
+            diff.diff_structures(old_structure, new_structure)
+        )
+
+    def testPatchEmpty(self):
+        a = {'hello': 'there'}
+        self.assertEquals(a, diff.patch(a, {}))
+        self.assertEquals(a, diff.patch(a, {'+':{}, '*':{}, '-':[]}))
+
+    def testPatch(self):
+        a = {'hello': 'there', 'done': None}
+        b = {'hello': 'hola', 'tank': False, 'gas': 8}
+        patch = diff.diff_structures(a, b)
+        self.assertEquals(b, diff.patch(a, patch))
+
+        a = ['hello']
+        b = ['hola', False, None]
+        patch = diff.diff_structures(a, b)
+        self.assertEquals(b, diff.patch(a, patch))
+
+    def testPatchNested(self):
+        a = {'a': {'b': {'c': 7}}}
+        b = {'a': {'b': {'d': 7}}}
+        patch = diff.diff_structures(a, b)
+        self.assertEquals(b, diff.patch(a, patch))

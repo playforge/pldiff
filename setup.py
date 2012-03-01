@@ -4,7 +4,7 @@ import distutils.core
 
 distutils.core.setup(
     name='pldiff',
-    version='1.0.1',
+    version='1.1.0',
     description='Structured Data Diffing',
     author='Stephen Altamirano',
     author_email='stephen@theplayforge.com',

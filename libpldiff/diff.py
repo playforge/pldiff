@@ -3,6 +3,8 @@
 Diffs structured data
 """
 
+import copy
+
 def find_top_level_keys(structure):
     """
     Finds all values that are valid indexes of the provided structure
@@ -58,15 +60,72 @@ def diff_structures(structure_1, structure_2):
         else:
             new_keys = set(new_keys)
             old_keys = set(old_keys)
-            for key in new_keys:
-                if key not in old_keys:
-                    final['+'][make_path(path + [key])] = new[key]
-                else:
-                    comparisons.append((old[key], new[key], path + [key]))
-                    old_keys.remove(key)
 
-            # keys present only in old_keys
-            for key in old_keys:
-                final['-'].append(make_path(path + [key]))
+            # path is used because we cannot represent a type change at the root
+            # level of the structure
+            if new_keys.isdisjoint(old_keys) and path:
+                final['*'][make_path(path)] = new
+            else:
+                for key in new_keys:
+                    if key not in old_keys:
+                        final['+'][make_path(path + [key])] = new[key]
+                    else:
+                        comparisons.append((old[key], new[key], path + [key]))
+                        old_keys.remove(key)
+
+                # keys present only in old_keys
+                for key in old_keys:
+                    final['-'].append(make_path(path + [key]))
 
     return final
+
+def patch(structure, diff):
+    """
+    Applies the changes represented in `diff` to `structure`. This function makes
+    no assumptions about the presence of +, *, - keys in `diff`.
+
+    `structure` is not modified by calling this function. A modified copy of
+    structure is returned.
+    """
+    # additions and modifications can be collapsed into one changeset
+    obj = copy.deepcopy(structure)
+    additions = diff.get('*', {}).items() + diff.get('+', {}).items()
+    for key, value in additions:
+        key_parts = key.split('.')
+        init, tail = key_parts[:-1], key_parts[-1]
+        struct = obj
+        for part in init:
+            struct = struct[part]
+
+        try:
+            tail = int(tail, 10)
+            # I will assume that this structure is list-like
+            if tail < 0:
+                raise Exception('List index must be >= 0')
+
+            while len(struct) < tail+1:
+                # I can't think of a better way, unfortunately
+                struct.append(None)
+        except ValueError:
+            pass
+
+        struct[tail] = value
+
+    for key in diff.get('-', []):
+        key_parts = key.split('.')
+        init, tail = key_parts[:-1], key_parts[-1]
+        struct = obj
+        for part in init:
+            struct = struct[part]
+
+        try:
+            tail = int(tail, 10)
+            if tail < 0:
+                raise Exception('List index must be >= 0')
+
+            while len(struct) >= tail+1:
+                del struct[tail]
+        except ValueError:
+            del struct[tail]
+
+    return obj
